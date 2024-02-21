@@ -1,0 +1,118 @@
+import pygame
+import random
+
+# Ініціалізація Pygame
+pygame.init()
+
+# Параметри вікна та гри
+SCREEN_WIDTH = 800
+SCREEN_HEIGHT = 600
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+
+# Звукові ефекти
+jump_sound = pygame.mixer.Sound("jump_sound.wav")
+collision_sound = pygame.mixer.Sound("collision_sound.wav")
+
+# Створення вікна
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+pygame.display.set_caption("Endless Runner")
+
+clock = pygame.time.Clock()
+
+# Клас для персонажа
+class Player:
+    def __init__(self):
+        self.x = 50
+        self.y = SCREEN_HEIGHT // 2
+        self.velocity_y = 0
+        self.gravity = 0.8
+        self.jump_strength = -12
+        self.image = pygame.image.load("player.png")
+
+    def jump(self):
+        self.velocity_y = self.jump_strength
+        jump_sound.play()
+
+    def move(self):
+        self.velocity_y += self.gravity
+        self.y += self.velocity_y
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+# Клас для перешкод
+class Obstacle:
+    def __init__(self, x):
+        self.x = x
+        self.width = 50
+        self.height = random.randint(100, 400)
+        self.image = pygame.image.load("obstacle.png")
+
+    def move(self):
+        self.x -= 5
+
+    def draw(self):
+        screen.blit(self.image, (self.x, SCREEN_HEIGHT - self.height))
+
+# Клас для бонусів
+class Bonus:
+    def __init__(self, x):
+        self.x = x
+        self.y = random.randint(100, SCREEN_HEIGHT - 100)
+        self.width = 50
+        self.height = 50
+        self.image = pygame.image.load("bonus.png")
+
+    def move(self):
+        self.x -= 5
+
+    def draw(self):
+        screen.blit(self.image, (self.x, self.y))
+
+# Генерація бонусів
+def generate_bonus():
+    if random.randint(1, 100) == 1:
+        return Bonus(SCREEN_WIDTH)
+    return None
+
+# Функція для відображення тексту на екрані
+def draw_text(text, font, color, x, y):
+    text_surface = font.render(text, True, color)
+    text_rect = text_surface.get_rect()
+    text_rect.center = (x, y)
+    screen.blit(text_surface, text_rect)
+
+# Головне меню гри
+def main_menu():
+    menu_font = pygame.font.Font(None, 50)
+    selected_option = 0
+    menu_options = ["Easy", "Medium", "Hard"]
+
+    running = True
+    while running:
+        screen.fill(BLACK)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_UP:
+                    selected_option = (selected_option - 1) % len(menu_options)
+                elif event.key == pygame.K_DOWN:
+                    selected_option = (selected_option + 1) % len(menu_options)
+                elif event.key == pygame.K_RETURN:
+                    if selected_option == 0:
+                        return 10
+                    elif selected_option == 1:
+                        return 15
+                    elif selected_option == 2:
+                        return 20
+
+        for i, option in enumerate(menu_options):
+            color = WHITE if i == selected_option else (150, 150, 150)
+            draw_text(option, menu_font, color, SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2 + i * 50)
+
+        pygame.display.update()
+        clock.tick(30)
